@@ -30,6 +30,8 @@ func (a *App) Start(ctx context.Context) error {
 }
 
 func (a *App) handleLink(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "content-type")
 	w.Header().Set("Content-Type", "application/json")
 	switch r.Method {
 	case http.MethodGet:
@@ -38,6 +40,8 @@ func (a *App) handleLink(w http.ResponseWriter, r *http.Request) {
 		a.handleCreateLink(w, r)
 	case http.MethodDelete:
 		a.handleDeleteLink(w, r)
+	case http.MethodOptions:
+		w.WriteHeader(http.StatusOK)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
@@ -78,6 +82,7 @@ func (a *App) handleCreateLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	link.Name = mux.Vars(r)["link"]
+
 	err = a.Store.CreateLink(r.Context(), link)
 	if err != nil {
 		a.Logger.Error(err.Error())
