@@ -4,9 +4,15 @@ export interface LinkData {
     url: string;
     name: string;
     description: string;
+    views?: number
 }
 
 interface CreateLinkResponse {
+    error?: string;
+}
+
+interface GetLinksResponse {
+    links: LinkData[];
     error?: string;
 }
 
@@ -28,8 +34,23 @@ export const createLink = async (link: LinkData): Promise<CreateLinkResponse> =>
         }
         return {}
     } catch (exception: any) {
-        console.log(exception)
         return { error: 'Failed to communicate with server, please try your request again' }
     }
+}
 
+export const getPopular = async (): Promise<GetLinksResponse> => {
+    try {
+        const response = await fetch(`${baseUrl}/api/popular`);
+        if (!response.ok) {
+            let message = 'Failed to complete'
+            if (response.body) {
+                message = response.body.toString()
+            }
+            return { links: [], error: message }
+        }
+        const links: LinkData[] = await response.json()
+        return { links }
+    } catch (exception: any) {
+        return { links: [], error: 'Failed to communicate with server, please try your request again' }
+    }
 }

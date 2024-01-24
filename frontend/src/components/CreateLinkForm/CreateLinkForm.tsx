@@ -46,15 +46,15 @@ export const CreateLinkForm = () => {
                 }}>
                     <FormControl>
                         <FormLabel>Destination URL</FormLabel>
-                        <Input value={formData.url} placeholder="https://jupiterone.com" name="url" required onChange={handleInputChange} />
+                        <Input value={formData.url} placeholder="https://google.com" name="url" required onChange={handleInputChange} />
                     </FormControl>
                     <FormControl>
                         <FormLabel>Golink Name (without go/ prefix)</FormLabel>
-                        <Input value={formData.name} placeholder="home" required name="name" onChange={handleInputChange} />
+                        <Input value={formData.name} placeholder="google" required name="name" onChange={handleInputChange} />
                     </FormControl>
                     <FormControl>
                         <FormLabel>Description</FormLabel>
-                        <Input value={formData.description} placeholder="JupiterOne homepage" name="description" required onChange={handleInputChange} />
+                        <Input value={formData.description} placeholder="Google Search Engine" name="description" required onChange={handleInputChange} />
                     </FormControl>
                     <Box sx={{ flexGrow: 1 }}>
                         <Button type="submit" disabled={linkSubmitted}>Create Link</Button>

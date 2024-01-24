@@ -108,6 +108,9 @@ func (a *App) handleDeleteLink(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) getPopular(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "content-type")
+	w.Header().Set("Content-Type", "application/json")
 	links, err := a.Store.GetPopularLinks(r.Context(), 3)
 	if err != nil {
 		a.Logger.Error(err.Error())
