@@ -1,3 +1,5 @@
+import { log } from "console";
+
 const baseUrl = process.env.NODE_ENV === "development" ? "http://localhost:8080" : "https://api.example.com";
 
 export interface LinkData {
@@ -28,7 +30,8 @@ export const createLink = async (link: LinkData): Promise<CreateLinkResponse> =>
         if (!response.ok) {
             let message = 'Failed to complete'
             if (response.body) {
-                message = response.body.toString()
+                const body = await response.json()
+                message = body.error
             }
             return { error: message }
         }
@@ -44,7 +47,8 @@ export const getPopular = async (): Promise<GetLinksResponse> => {
         if (!response.ok) {
             let message = 'Failed to complete'
             if (response.body) {
-                message = response.body.toString()
+                const body = await response.json()
+                message = body.error
             }
             return { links: [], error: message }
         }

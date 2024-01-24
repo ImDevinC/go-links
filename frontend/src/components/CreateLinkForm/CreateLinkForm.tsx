@@ -3,7 +3,11 @@ import React, { FormEvent, useState } from "react";
 import { LinkData, createLink } from "../../services/api/links";
 import { CloseRounded } from "@mui/icons-material";
 
-export const CreateLinkForm = () => {
+interface CreateLinkFormProps {
+    onSuccess: () => void
+}
+
+export const CreateLinkForm = (props: CreateLinkFormProps) => {
     const [formData, setFormData] = useState<LinkData>(
         { url: '', name: '', description: '' }
     )
@@ -30,6 +34,7 @@ export const CreateLinkForm = () => {
         setMessageSeverity('success');
         setResponseMessage(`Link go/${formData.name} created successfully!`);
         setFormData({ url: '', name: '', description: '' });
+        props.onSuccess();
     }
 
     const disableAlert = () => setShowAlert(false);

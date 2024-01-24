@@ -4,8 +4,6 @@ import { QueryLinkForm } from "../QueryLinkForm";
 import { LinkTabs } from "../LinkTabs";
 
 export const LinkOverview = () => {
-
-
     return (
         <Box sx={{ flex: 1, width: '100%', mx: 'auto' }}>
             <Stack spacing={4} sx={{

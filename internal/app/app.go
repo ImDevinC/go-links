@@ -25,8 +25,8 @@ func (a *App) Start(ctx context.Context) error {
 	r := mux.NewRouter()
 	r.Use(corsHandler)
 	r.Handle("/", http.FileServer(http.Dir("./frontend/public")))
-	r.HandleFunc("/{link}", a.handleLink)
 	r.HandleFunc("/api/popular", a.getPopular)
+	r.HandleFunc("/{link:.*}", a.handleLink)
 
 	a.Logger.Info("starting server on port 8080")
 	return http.ListenAndServe(fmt.Sprintf(":%d", 8080), r)
@@ -115,10 +115,8 @@ func (a *App) handleDeleteLink(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) getPopular(w http.ResponseWriter, r *http.Request) {
-	// w.Header().Set("Access-Control-Allow-Origin", "*")
-	// w.Header().Set("Access-Control-Allow-Headers", "content-type")
 	w.Header().Set("Content-Type", "application/json")
-	links, err := a.Store.GetPopularLinks(r.Context(), 3)
+	links, err := a.Store.GetPopularLinks(r.Context(), 10)
 	if err != nil {
 		a.Logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)

@@ -1,14 +1,17 @@
 import { FormControl } from "@mui/base";
-import { Box, Button, Input } from "@mui/joy";
+import { Button, Input, Stack } from "@mui/joy";
 import React, { useState } from "react";
+import { NewLinkButton } from "../NewLinkButton";
 
 export const QueryLinkForm = () => {
     const [query, setQuery] = useState('');
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+        // TODO: implement
     }
 
     return (
-        <Box sx={{ flexGrow: 1 }}>
+        <Stack spacing={2}>
+            <NewLinkButton />
             <form onSubmit={handleSubmit} id="find-link">
                 <FormControl>
                     <Input
@@ -24,6 +27,6 @@ export const QueryLinkForm = () => {
                     />
                 </FormControl>
             </form>
-        </Box>
+        </Stack>
     )
 }
