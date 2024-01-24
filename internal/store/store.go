@@ -10,7 +10,7 @@ type Link struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	URL         string `json:"url"`
-	Disabled    bool   `json:"disabled"`
+	Views       int    `json:"views"`
 }
 
 func CreateLinkFromPayload(payload []byte) (Link, error) {
@@ -30,4 +30,5 @@ type Store interface {
 	GetLinkByName(ctx context.Context, name string) (Link, error)
 	GetLinkByURL(ctx context.Context, url string) (Link, error)
 	DisableLink(ctx context.Context, name string) error
+	GetPopularLinks(ctx context.Context, size int) ([]Link, error)
 }

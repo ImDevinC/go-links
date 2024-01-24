@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -24,6 +25,7 @@ func (a *App) Start(ctx context.Context) error {
 	r := mux.NewRouter()
 	r.Handle("/", http.FileServer(http.Dir("./frontend/public")))
 	r.HandleFunc("/{link}", a.handleLink)
+	r.HandleFunc("/api/popular", a.getPopular)
 
 	a.Logger.Info("starting server on port 8080")
 	return http.ListenAndServe(fmt.Sprintf(":%d", 8080), r)
@@ -103,4 +105,21 @@ func (a *App) handleDeleteLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusAccepted)
+}
+
+func (a *App) getPopular(w http.ResponseWriter, r *http.Request) {
+	links, err := a.Store.GetPopularLinks(r.Context(), 3)
+	if err != nil {
+		a.Logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"error": "internal server error"}`))
+		return
+	}
+	err = json.NewEncoder(w).Encode(links)
+	if err != nil {
+		a.Logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"error": "internal server error"}`))
+		return
+	}
 }

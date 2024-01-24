@@ -1,7 +1,9 @@
 package store
 
 import (
+	"cmp"
 	"context"
+	"slices"
 	"strings"
 )
 
@@ -23,7 +25,6 @@ func (m *memory) DisableLink(ctx context.Context, name string) error {
 		return ErrLinkNotFound
 	}
 	link := m.links[name]
-	link.Disabled = true
 	m.links[name] = link
 	return nil
 }
@@ -40,7 +41,7 @@ func (m *memory) CreateLink(ctx context.Context, link Link) error {
 // GetLinkByName implements Store.
 func (m *memory) GetLinkByName(ctx context.Context, name string) (Link, error) {
 	for _, link := range m.links {
-		if strings.EqualFold(link.Name, name) && !link.Disabled {
+		if strings.EqualFold(link.Name, name) {
 			return link, nil
 		}
 	}
@@ -55,4 +56,18 @@ func (m *memory) GetLinkByURL(ctx context.Context, url string) (Link, error) {
 		}
 	}
 	return Link{}, ErrLinkNotFound
+}
+
+func (m *memory) GetPopularLinks(ctx context.Context, size int) ([]Link, error) {
+	links := []Link{}
+	for _, link := range m.links {
+		links = append(links, link)
+	}
+	slices.SortFunc(links, func(a Link, b Link) int {
+		return cmp.Compare(b.Views, a.Views)
+	})
+	if size < len(links) {
+		links = links[:size]
+	}
+	return links, nil
 }
