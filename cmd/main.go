@@ -6,7 +6,9 @@ import (
 	"os"
 
 	"github.com/imdevinc/go-links/internal/app"
+	"github.com/imdevinc/go-links/internal/config"
 	"github.com/imdevinc/go-links/internal/store"
+	_ "github.com/joho/godotenv/autoload"
 )
 
 func main() {
@@ -35,7 +37,8 @@ func main() {
 		Views:       1,
 	})
 
-	err := server.Start(context.Background())
+	cfg := config.FromEnv()
+	err := server.Start(context.Background(), &cfg)
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)

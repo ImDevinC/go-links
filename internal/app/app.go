@@ -9,24 +9,32 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/imdevinc/go-links/internal/config"
 	"github.com/imdevinc/go-links/internal/store"
 )
 
 type App struct {
 	Store  store.Store
 	Logger *slog.Logger
+	config *config.Config
 }
 
-func (a *App) Start(ctx context.Context) error {
+func (a *App) Start(ctx context.Context, cfg *config.Config) error {
 	if a.Store == nil {
 		return fmt.Errorf("store is nil")
 	}
 
+	if cfg.StaticPath == "" {
+		cfg.StaticPath = "/"
+	}
+	a.Logger.Info(cfg.StaticPath)
+	a.config = cfg
+
 	r := mux.NewRouter()
 	r.Use(corsHandler)
-	r.Handle("/", http.FileServer(http.Dir("./frontend/public")))
+	r.Handle("/", http.FileServer(http.Dir(cfg.StaticPath)))
 	r.HandleFunc("/api/popular", a.getPopular)
-	r.HandleFunc("/{link:.*}", a.handleLink)
+	// r.HandleFunc("/{link:.*}", a.handleLink)
 
 	a.Logger.Info("starting server on port 8080")
 	return http.ListenAndServe(fmt.Sprintf(":%d", 8080), r)

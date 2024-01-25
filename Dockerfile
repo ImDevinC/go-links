@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine AS builder
+FROM golang:1.21.6-alpine AS backend
 
 WORKDIR /app
 
@@ -6,15 +6,26 @@ COPY go.mod go.sum ./
 
 RUN go mod download
 
-COPY . .
+COPY cmd/ cmd/
+COPY internal/ internal/
 
 RUN go build -o /app/main ./cmd/main.go
 
+FROM node:21-alpine AS frontend
+
+WORKDIR /app
+
+COPY frontend/ .
+
+RUN npm ci && \
+    npm run build
+
 FROM scratch
 
-COPY --from=builder /app/main /main
+COPY --from=backend /app/main /main
+COPY --from=frontend /app/build/ /
 
 EXPOSE 8080
 
-ENTRYPOINT [ "/app/main" ]
+ENTRYPOINT [ "/main" ]
 
