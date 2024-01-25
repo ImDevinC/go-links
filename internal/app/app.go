@@ -27,14 +27,16 @@ func (a *App) Start(ctx context.Context, cfg *config.Config) error {
 	if cfg.StaticPath == "" {
 		cfg.StaticPath = "/"
 	}
-	a.Logger.Info(cfg.StaticPath)
 	a.config = cfg
 
 	r := mux.NewRouter()
 	r.Use(corsHandler)
-	r.Handle("/", http.FileServer(http.Dir(cfg.StaticPath)))
+
 	r.HandleFunc("/api/popular", a.getPopular)
-	// r.HandleFunc("/{link:.*}", a.handleLink)
+	fs := http.FileServer(http.Dir(cfg.StaticPath))
+	r.Path("/").Handler(fs)
+	r.PathPrefix("/static/").Handler(fs)
+	r.HandleFunc("/{link:.*}", a.handleLink)
 
 	a.Logger.Info("starting server on port 8080")
 	return http.ListenAndServe(fmt.Sprintf(":%d", 8080), r)

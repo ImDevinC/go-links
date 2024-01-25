@@ -1,6 +1,4 @@
-import { log } from "console";
-
-const baseUrl = process.env.NODE_ENV === "development" ? "http://localhost:8080" : "https://api.example.com";
+const baseUrl = process.env.REACT_APP_ENV === "production" ? "https://api.example.com" : "http://localhost:8080";
 
 export interface LinkData {
     url: string;
