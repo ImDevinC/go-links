@@ -15,6 +15,7 @@ type Link struct {
 	Created     time.Time `json:"created_at"`
 	Updated     time.Time `json:"updated_at"`
 	CreatedBy   string    `json:"created_by"`
+	Disabled    bool      `json:"disabled"`
 }
 
 func CreateLinkFromPayload(payload []byte) (Link, error) {

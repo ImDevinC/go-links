@@ -22,12 +22,15 @@ func NewMemoryStore() *memory {
 
 // DeleteLink implements Store.
 func (m *memory) DisableLink(ctx context.Context, name string) error {
-	if _, ok := m.links[name]; !ok {
-		return ErrLinkNotFound
-	}
-	link := m.links[name]
-	link.Updated = time.Now()
-	m.links[name] = link
+	delete(m.links, name)
+	// if _, ok := m.links[name]; !ok {
+	// 	return ErrLinkNotFound
+	// }
+	// link := m.links[name]
+	// link.Updated = time.Now()
+	// // link.Disabled = true
+
+	// m.links[name] = link
 	return nil
 }
 
@@ -45,7 +48,7 @@ func (m *memory) CreateLink(ctx context.Context, link Link) error {
 // GetLinkByName implements Store.
 func (m *memory) GetLinkByName(ctx context.Context, name string) (Link, error) {
 	for _, link := range m.links {
-		if strings.EqualFold(link.Name, name) {
+		if !link.Disabled && strings.EqualFold(link.Name, name) {
 			return link, nil
 		}
 	}
@@ -55,7 +58,7 @@ func (m *memory) GetLinkByName(ctx context.Context, name string) (Link, error) {
 // GetLinkByURL implements Store.
 func (m *memory) GetLinkByURL(ctx context.Context, url string) (Link, error) {
 	for _, link := range m.links {
-		if strings.EqualFold(link.URL, url) {
+		if !link.Disabled && strings.EqualFold(link.URL, url) {
 			return link, nil
 		}
 	}
@@ -65,7 +68,9 @@ func (m *memory) GetLinkByURL(ctx context.Context, url string) (Link, error) {
 func (m *memory) GetPopularLinks(ctx context.Context, size int) ([]Link, error) {
 	links := []Link{}
 	for _, link := range m.links {
-		links = append(links, link)
+		if !link.Disabled {
+			links = append(links, link)
+		}
 	}
 	slices.SortFunc(links, func(a Link, b Link) int {
 		return cmp.Compare(b.Views, a.Views)
@@ -79,7 +84,9 @@ func (m *memory) GetPopularLinks(ctx context.Context, size int) ([]Link, error) 
 func (m *memory) GetRecentLinks(ctx context.Context, size int) ([]Link, error) {
 	links := []Link{}
 	for _, link := range m.links {
-		links = append(links, link)
+		if !link.Disabled {
+			links = append(links, link)
+		}
 	}
 	slices.SortFunc(links, func(a Link, b Link) int {
 		return b.Updated.Compare(a.Updated)
@@ -93,7 +100,7 @@ func (m *memory) GetRecentLinks(ctx context.Context, size int) ([]Link, error) {
 func (m *memory) GetOwnedLinks(ctx context.Context, email string) ([]Link, error) {
 	links := []Link{}
 	for _, link := range m.links {
-		if strings.EqualFold(link.CreatedBy, email) {
+		if !link.Disabled && strings.EqualFold(link.CreatedBy, email) {
 			links = append(links, link)
 		}
 	}
