@@ -123,3 +123,24 @@ export const disableLink = async (name: string): Promise<CreateLinkResponse> => 
         return { error: 'Failed to communicate with server, please try your request again' }
     }
 }
+
+export const queryLinks = async (query: string): Promise<GetLinksResponse> => {
+    try {
+        const response = await fetch(`${baseUrl}/api/query`, {
+            method: 'POST',
+            body: JSON.stringify({ query: query }),
+        });
+        if (!response.ok) {
+            let message = 'Failed to complete'
+            if (response.body) {
+                const body = await response.json()
+                message = body.error
+            }
+            return { links: [], error: message }
+        }
+        const links: LinkData[] = await response.json()
+        return { links }
+    } catch (exception: any) {
+        return { links: [], error: 'Failed to communicate with server, please try your request again' }
+    }
+}

@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -27,6 +26,7 @@ type App struct {
 	Store  store.Store
 	Logger *slog.Logger
 	config *config.Config
+	sp     *samlsp.Middleware
 }
 
 type GetLinksType string
@@ -43,6 +43,10 @@ type ErrorResponse struct {
 	Error string `json:"error,omitempty"`
 }
 
+type QueryInput struct {
+	Query string `json:"query"`
+}
+
 func (a *App) Start(ctx context.Context, cfg *config.Config) error {
 	if a.Store == nil {
 		return fmt.Errorf("store is nil")
@@ -57,19 +61,14 @@ func (a *App) Start(ctx context.Context, cfg *config.Config) error {
 	if err != nil {
 		return fmt.Errorf("failed to configure saml: %w", err)
 	}
+	a.sp = sp
 
 	r := mux.NewRouter()
 	r.Use(corsHandler)
 
-	r.PathPrefix("/api").Methods(http.MethodGet).HandlerFunc(a.handleApi)
-	r.PathPrefix("/api").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sendError(w, http.StatusMethodNotAllowed, ErrorResponse{Error: "Protected route"})
-	})
+	r.PathPrefix("/api").Handler(sp.RequireAccount(http.HandlerFunc(a.handleApi)))
 	fs := http.FileServer(http.Dir(cfg.StaticPath))
 	r.PathPrefix("/saml/").Handler(sp)
-	r.Handle("/hello", sp.RequireAccount(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello, %s!", samlsp.AttributeFromContext(r.Context(), "email"))
-	})))
 	r.Path("/").Handler(sp.RequireAccount(fs))
 	r.PathPrefix("/static").Methods(http.MethodGet).Handler(fs)
 	r.PathPrefix("/static").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -119,7 +118,7 @@ func (a *App) handleGetLink(w http.ResponseWriter, r *http.Request) {
 		sendError(w, http.StatusNotFound, ErrorResponse{Error: "link not found"})
 		return
 	}
-	err = a.Store.IncrementLinkViews(r.Context(), result.Name)
+	_ = a.Store.IncrementLinkViews(r.Context(), result.Name)
 	http.Redirect(w, r, result.URL, http.StatusFound)
 }
 
@@ -240,6 +239,8 @@ func (a *App) handleApi(w http.ResponseWriter, r *http.Request) {
 		a.handleGetLinkList(Recent)(w, r)
 	case "/api/owned":
 		a.handleGetLinkList(Owned)(w, r)
+	case "/api/query":
+		a.handleQueryLinks(w, r)
 	default:
 		sendError(w, http.StatusNotFound, ErrorResponse{Error: "not found"})
 	}
@@ -248,8 +249,6 @@ func (a *App) handleApi(w http.ResponseWriter, r *http.Request) {
 func (a *App) configureSaml() (*samlsp.Middleware, error) {
 	keypair, err := tls.X509KeyPair(a.config.SSO.SamlCert, a.config.SSO.SamlKey)
 	if err != nil {
-		log.Println(a.config.SSO.SamlCert)
-		log.Println(a.config.SSO.SamlKey)
 		return nil, fmt.Errorf("failed to load keypair: %w", err)
 	}
 	keypair.Leaf, err = x509.ParseCertificate(keypair.Certificate[0])
@@ -295,4 +294,38 @@ func getEmailFromRequest(r *http.Request) (string, error) {
 		return "", fmt.Errorf("failed to parse claims")
 	}
 	return claims.GetSubject()
+}
+
+func (a *App) handleQueryLinks(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	if r.Method != http.MethodPost {
+		sendError(w, http.StatusMethodNotAllowed, ErrorResponse{})
+		return
+	}
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		a.Logger.Error(err.Error())
+		sendError(w, http.StatusBadRequest, ErrorResponse{Error: "bad request"})
+		return
+	}
+	input := QueryInput{}
+	err = json.Unmarshal(body, &input)
+	if err != nil {
+		a.Logger.Error(err.Error())
+		sendError(w, http.StatusBadRequest, ErrorResponse{Error: "bad request"})
+		return
+	}
+
+	links, err := a.Store.QueryLinks(r.Context(), input.Query)
+	if err != nil {
+		a.Logger.Error(err.Error())
+		sendError(w, http.StatusInternalServerError, ErrorResponse{Error: "internal server error"})
+		return
+	}
+	err = json.NewEncoder(w).Encode(links)
+	if err != nil {
+		a.Logger.Error(err.Error())
+		sendError(w, http.StatusInternalServerError, ErrorResponse{Error: "internal server error"})
+		return
+	}
 }

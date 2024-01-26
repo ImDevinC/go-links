@@ -39,4 +39,5 @@ type Store interface {
 	GetRecentLinks(ctx context.Context, size int) ([]Link, error)
 	GetOwnedLinks(ctx context.Context, email string) ([]Link, error)
 	IncrementLinkViews(ctx context.Context, name string) error
+	QueryLinks(ctx context.Context, query string) ([]Link, error)
 }

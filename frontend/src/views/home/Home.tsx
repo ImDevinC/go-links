@@ -6,7 +6,6 @@ export const Home = () => {
     return (
         <Box sx={{ flex: 1, width: '100%' }}>
             <ThemeToggle />
-            {/* <CreateLinkForm /> */}
             <LinkOverview />
         </Box>
     )

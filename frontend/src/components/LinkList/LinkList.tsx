@@ -5,6 +5,7 @@ import { Link } from "../Link";
 
 interface LinkListProps {
     getLinkFn: () => Promise<GetLinksResponse>
+    lastUpdated: string
 }
 
 export const LinkList = (props: LinkListProps) => {
@@ -17,7 +18,7 @@ export const LinkList = (props: LinkListProps) => {
 
     useEffect(() => {
         updateLinkList()
-    }, [updateLinkList])
+    }, [updateLinkList, props.lastUpdated])
 
     return (
         <Box sx={{ flex: 1, width: '100%', mx: 'auto' }}>

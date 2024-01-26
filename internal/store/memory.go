@@ -116,3 +116,13 @@ func (m *memory) IncrementLinkViews(ctx context.Context, name string) error {
 	m.links[name] = link
 	return nil
 }
+
+func (m *memory) QueryLinks(ctx context.Context, query string) ([]Link, error) {
+	links := []Link{}
+	for _, link := range m.links {
+		if !link.Disabled && (strings.Contains(strings.ToLower(link.Name), strings.ToLower(query)) || strings.Contains(strings.ToLower(link.Description), strings.ToLower(query))) {
+			links = append(links, link)
+		}
+	}
+	return links, nil
+}

@@ -2,6 +2,7 @@ import { ContentCopy, Delete, Visibility, WarningRounded } from "@mui/icons-mate
 import { Alert, Button, DialogActions, DialogContent, DialogTitle, Divider, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 import React, { useState } from "react";
 import { LinkData, disableLink } from "../../services/api/links";
+import aveta from 'aveta';
 
 export interface LinkProps {
     link: LinkData
@@ -33,7 +34,7 @@ export const Link = (props: LinkProps) => {
                     <Typography level="body-sm">{props.link.description}</Typography>
                 </Stack>
                 <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                    <Typography level="body-md" startDecorator={<Visibility />}>{props.link.views}</Typography>
+                    <Typography level="body-md" startDecorator={<Visibility />}>{aveta(props.link.views!, { precision: 2, lowercase: true })}</Typography>
                     <Button variant="plain" sx={{ mx: 0, p: 1 }} onClick={() => setOpenDialog(true)}><Delete /></Button>
                     <Button variant="plain" sx={{ mx: 0, p: 1 }} onClick={copyToClipboard}><ContentCopy /></Button>
                 </Stack>

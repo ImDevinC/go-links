@@ -22,19 +22,22 @@ func main() {
 		Name:        "site",
 		URL:         "https://imdevinc.com",
 		Description: "site",
-		Views:       2,
+		Views:       2500000,
+		CreatedBy:   "me@imdevinc.com",
 	})
 	server.Store.CreateLink(context.Background(), store.Link{
 		Name:        "imdevinc",
 		URL:         "https://github.com/imdevinc",
 		Description: "GitHub",
-		Views:       10,
+		Views:       10123456,
+		CreatedBy:   "me@imdevinc.com",
 	})
 	server.Store.CreateLink(context.Background(), store.Link{
 		Name:        "google",
 		URL:         "https://google.com",
 		Description: "google",
-		Views:       1,
+		Views:       50500,
+		CreatedBy:   "me@imdevinc.com",
 	})
 
 	cfg := config.FromEnv()
