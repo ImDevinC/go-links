@@ -89,3 +89,23 @@ func (m *memory) GetRecentLinks(ctx context.Context, size int) ([]Link, error) {
 	}
 	return links, nil
 }
+
+func (m *memory) GetOwnedLinks(ctx context.Context, email string) ([]Link, error) {
+	links := []Link{}
+	for _, link := range m.links {
+		if strings.EqualFold(link.CreatedBy, email) {
+			links = append(links, link)
+		}
+	}
+	return links, nil
+}
+
+func (m *memory) IncrementLinkViews(ctx context.Context, name string) error {
+	if _, ok := m.links[name]; !ok {
+		return ErrLinkNotFound
+	}
+	link := m.links[name]
+	link.Views++
+	m.links[name] = link
+	return nil
+}

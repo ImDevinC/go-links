@@ -1,4 +1,4 @@
-const baseUrl = process.env.REACT_APP_ENV === "production" ? "https://api.example.com" : "http://localhost:8080";
+const baseUrl = process.env.REACT_APP_ENV === "production" ? process.env.PUBLIC_URL : "http://localhost:8080";
 
 export interface LinkData {
     url: string;
@@ -64,6 +64,24 @@ export const getPopular = async (): Promise<GetLinksResponse> => {
 export const getRecent = async (): Promise<GetLinksResponse> => {
     try {
         const response = await fetch(`${baseUrl}/api/recent`);
+        if (!response.ok) {
+            let message = 'Failed to complete'
+            if (response.body) {
+                const body = await response.json()
+                message = body.error
+            }
+            return { links: [], error: message }
+        }
+        const links: LinkData[] = await response.json()
+        return { links }
+    } catch (exception: any) {
+        return { links: [], error: 'Failed to communicate with server, please try your request again' }
+    }
+}
+
+export const getOwned = async (): Promise<GetLinksResponse> => {
+    try {
+        const response = await fetch(`${baseUrl}/api/owned`);
         if (!response.ok) {
             let message = 'Failed to complete'
             if (response.body) {

@@ -2,14 +2,22 @@ package app
 
 import (
 	"context"
+	"crypto/rsa"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"log/slog"
 	"net/http"
+	"net/url"
+	"os"
 	"regexp"
 	"strings"
 
+	"github.com/crewjam/saml/samlsp"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 	"github.com/imdevinc/go-links/internal/config"
 	"github.com/imdevinc/go-links/internal/store"
@@ -26,6 +34,7 @@ type GetLinksType string
 const (
 	Recent  GetLinksType = "recent"
 	Popular GetLinksType = "popular"
+	Owned   GetLinksType = "owned"
 )
 
 var staticRegexp = regexp.MustCompile(`^static(\/.*)?|api\/popular|api\/recent`)
@@ -44,6 +53,11 @@ func (a *App) Start(ctx context.Context, cfg *config.Config) error {
 	}
 	a.config = cfg
 
+	sp, err := a.configureSaml()
+	if err != nil {
+		return fmt.Errorf("failed to configure saml: %w", err)
+	}
+
 	r := mux.NewRouter()
 	r.Use(corsHandler)
 
@@ -52,7 +66,11 @@ func (a *App) Start(ctx context.Context, cfg *config.Config) error {
 		sendError(w, http.StatusMethodNotAllowed, ErrorResponse{Error: "Protected route"})
 	})
 	fs := http.FileServer(http.Dir(cfg.StaticPath))
-	r.Path("/").Handler(fs)
+	r.PathPrefix("/saml/").Handler(sp)
+	r.Handle("/hello", sp.RequireAccount(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello, %s!", samlsp.AttributeFromContext(r.Context(), "email"))
+	})))
+	r.Path("/").Handler(sp.RequireAccount(fs))
 	r.PathPrefix("/static").Methods(http.MethodGet).Handler(fs)
 	r.PathPrefix("/static").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sendError(w, http.StatusMethodNotAllowed, ErrorResponse{Error: "Protected route"})
@@ -101,11 +119,17 @@ func (a *App) handleGetLink(w http.ResponseWriter, r *http.Request) {
 		sendError(w, http.StatusNotFound, ErrorResponse{Error: "link not found"})
 		return
 	}
-
+	err = a.Store.IncrementLinkViews(r.Context(), result.Name)
 	http.Redirect(w, r, result.URL, http.StatusFound)
 }
 
 func (a *App) handleCreateLink(w http.ResponseWriter, r *http.Request) {
+	email, err := getEmailFromRequest(r)
+	if err != nil {
+		a.Logger.Error(err.Error())
+		sendError(w, http.StatusUnauthorized, ErrorResponse{Error: "missing authentication token"})
+		return
+	}
 	body, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
@@ -120,6 +144,7 @@ func (a *App) handleCreateLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	link.Name = cleanLink(mux.Vars(r)["link"])
+	link.CreatedBy = email
 	err = a.Store.CreateLink(r.Context(), link)
 	if err != nil {
 		a.Logger.Error(err.Error())
@@ -155,6 +180,19 @@ func (a *App) handleGetLinkList(t GetLinksType) http.HandlerFunc {
 			links, err = a.Store.GetPopularLinks(r.Context(), 10)
 		case Recent:
 			links, err = a.Store.GetRecentLinks(r.Context(), 10)
+		case Owned:
+			email, err := getEmailFromRequest(r)
+			if err != nil {
+				a.Logger.Error(err.Error())
+				sendError(w, http.StatusUnauthorized, ErrorResponse{Error: "missing authentication token"})
+				return
+			}
+			links, err = a.Store.GetOwnedLinks(r.Context(), email)
+			if err != nil {
+				a.Logger.Error(err.Error())
+				sendError(w, http.StatusUnauthorized, ErrorResponse{Error: "internal server error"})
+				return
+			}
 		default:
 			sendError(w, http.StatusBadRequest, ErrorResponse{Error: "unknown link list type"})
 			return
@@ -200,7 +238,61 @@ func (a *App) handleApi(w http.ResponseWriter, r *http.Request) {
 		a.handleGetLinkList(Popular)(w, r)
 	case "/api/recent":
 		a.handleGetLinkList(Recent)(w, r)
+	case "/api/owned":
+		a.handleGetLinkList(Owned)(w, r)
 	default:
 		sendError(w, http.StatusNotFound, ErrorResponse{Error: "not found"})
 	}
+}
+
+func (a *App) configureSaml() (*samlsp.Middleware, error) {
+	keypair, err := tls.X509KeyPair(a.config.SSO.SamlCert, a.config.SSO.SamlKey)
+	if err != nil {
+		log.Println(a.config.SSO.SamlCert)
+		log.Println(a.config.SSO.SamlKey)
+		return nil, fmt.Errorf("failed to load keypair: %w", err)
+	}
+	keypair.Leaf, err = x509.ParseCertificate(keypair.Certificate[0])
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse certificate: %w", err)
+	}
+	metadataContent, err := os.ReadFile(a.config.SSO.MetadataFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read metadata file: %w", err)
+	}
+	idpMetadata, err := samlsp.ParseMetadata(metadataContent)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse metadata: %w", err)
+	}
+	rootUrl, err := url.Parse(a.config.SSO.CallbackURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse root url: %w", err)
+	}
+	sp, err := samlsp.New(samlsp.Options{
+		URL:               *rootUrl,
+		Key:               keypair.PrivateKey.(*rsa.PrivateKey),
+		Certificate:       keypair.Leaf,
+		IDPMetadata:       idpMetadata,
+		EntityID:          a.config.SSO.EntityID,
+		AllowIDPInitiated: true,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create samlsp: %w", err)
+	}
+	return sp, nil
+}
+
+func getEmailFromRequest(r *http.Request) (string, error) {
+	c, err := r.Cookie("token")
+	if err != nil {
+		return "", fmt.Errorf("failed to get cookie: %w", err)
+	}
+	token, _ := jwt.Parse(c.Value, func(t *jwt.Token) (interface{}, error) {
+		return nil, nil
+	})
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", fmt.Errorf("failed to parse claims")
+	}
+	return claims.GetSubject()
 }
