@@ -1,18 +1,22 @@
 import { Box, Typography } from "@mui/joy";
 import React, { useEffect, useState } from "react";
-import { LinkData, getPopular } from "../../services/api/links";
+import { LinkData, GetLinksResponse } from "../../services/api/links";
 import { Link } from "../Link";
 
-export const PopularLinks = () => {
+interface LinkListProps {
+    getLinkFn: () => Promise<GetLinksResponse>
+}
+
+export const LinkList = (props: LinkListProps) => {
     const [links, setLinks] = useState<LinkData[]>([])
 
     useEffect(() => {
         const fetchLinks = async () => {
-            const links = await getPopular()
+            const links = await props.getLinkFn()
             setLinks(links.links)
         }
         fetchLinks()
-    }, [])
+    }, [props])
 
     return (
         <Box sx={{ flex: 1, width: '100%', mx: 'auto' }}>

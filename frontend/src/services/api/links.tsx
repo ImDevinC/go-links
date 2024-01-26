@@ -11,7 +11,7 @@ interface CreateLinkResponse {
     error?: string;
 }
 
-interface GetLinksResponse {
+export interface GetLinksResponse {
     links: LinkData[];
     error?: string;
 }
@@ -28,8 +28,12 @@ export const createLink = async (link: LinkData): Promise<CreateLinkResponse> =>
         if (!response.ok) {
             let message = 'Failed to complete'
             if (response.body) {
-                const body = await response.json()
-                message = body.error
+                try {
+                    const body = await response.json()
+                    message = body.error
+                } catch (exception: any) {
+                    message = response.statusText
+                }
             }
             return { error: message }
         }
@@ -42,6 +46,24 @@ export const createLink = async (link: LinkData): Promise<CreateLinkResponse> =>
 export const getPopular = async (): Promise<GetLinksResponse> => {
     try {
         const response = await fetch(`${baseUrl}/api/popular`);
+        if (!response.ok) {
+            let message = 'Failed to complete'
+            if (response.body) {
+                const body = await response.json()
+                message = body.error
+            }
+            return { links: [], error: message }
+        }
+        const links: LinkData[] = await response.json()
+        return { links }
+    } catch (exception: any) {
+        return { links: [], error: 'Failed to communicate with server, please try your request again' }
+    }
+}
+
+export const getRecent = async (): Promise<GetLinksResponse> => {
+    try {
+        const response = await fetch(`${baseUrl}/api/recent`);
         if (!response.ok) {
             let message = 'Failed to complete'
             if (response.body) {

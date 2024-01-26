@@ -11,10 +11,8 @@ export const CreateLinkForm = (props: CreateLinkFormProps) => {
     const [formData, setFormData] = useState<LinkData>(
         { url: '', name: '', description: '' }
     )
-    const [linkSubmitted, setLinkSubmitted] = useState(false)
-    const [responseMessage, setResponseMessage] = useState('')
-    const [messageSeverity, setMessageSeverity] = useState<'success' | 'danger'>('success')
-    const [showAlert, setShowAlert] = useState(false)
+    const [loading, setLoading] = useState(false)
+    const [errorMessage, setErrorMessage] = useState('')
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [event.target.name]: event.target.value })
@@ -22,22 +20,20 @@ export const CreateLinkForm = (props: CreateLinkFormProps) => {
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        setLinkSubmitted(true);
+        setLoading(true);
+        setErrorMessage('');
         const resp = await createLink(formData);
-        setLinkSubmitted(false);
-        setShowAlert(true);
+        setLoading(false);
         if (resp.error) {
-            setMessageSeverity('danger');
-            setResponseMessage(resp.error);
+            setErrorMessage(resp.error);
             return;
         }
-        setMessageSeverity('success');
-        setResponseMessage(`Link go/${formData.name} created successfully!`);
+        setErrorMessage('');
         setFormData({ url: '', name: '', description: '' });
         props.onSuccess();
     }
 
-    const disableAlert = () => setShowAlert(false);
+    const disableAlert = () => setErrorMessage('');
 
     return (
         <Box sx={{ flex: 1, width: '100%' }}>
@@ -62,15 +58,15 @@ export const CreateLinkForm = (props: CreateLinkFormProps) => {
                         <Input value={formData.description} placeholder="Google Search Engine" name="description" required onChange={handleInputChange} />
                     </FormControl>
                     <Box sx={{ flexGrow: 1 }}>
-                        <Button type="submit" disabled={linkSubmitted}>Create Link</Button>
+                        <Button type="submit" loading={loading}>Create Link</Button>
                     </Box>
                     {
-                        showAlert ?
-                            <Alert color={messageSeverity} endDecorator={
+                        errorMessage !== '' ?
+                            <Alert color="danger" endDecorator={
                                 <IconButton variant="plain" size="sm" color="neutral">
                                     <CloseRounded onClick={disableAlert} />
                                 </IconButton>
-                            }>{responseMessage}</Alert>
+                            }>{errorMessage}</Alert>
                             : null
                     }
 

@@ -1,6 +1,7 @@
 import { Box, Tab, TabList, TabPanel, Tabs, Typography, tabClasses } from "@mui/joy";
 import React from "react";
-import { PopularLinks } from "../PopularLinks";
+import { LinkList } from "../LinkList";
+import { getPopular, getRecent } from "../../services/api/links";
 
 export const LinkTabs = () => {
     return (
@@ -29,9 +30,9 @@ export const LinkTabs = () => {
                     <Tab variant="plain" color="neutral"><Typography>Popular</Typography></Tab>
                     <Tab variant="plain" color="neutral"><Typography>Recent</Typography></Tab>
                     <Tab variant="plain" color="neutral"><Typography>My Links</Typography></Tab>
-                    <Tab variant="plain" color="neutral"><Typography>Recently deactivated</Typography></Tab>
                 </TabList>
-                <TabPanel value={0}><PopularLinks /></TabPanel>
+                <TabPanel value={0}><LinkList getLinkFn={getPopular} /></TabPanel>
+                <TabPanel value={1}><LinkList getLinkFn={getRecent} /></TabPanel>
             </Tabs>
         </Box >
     )
