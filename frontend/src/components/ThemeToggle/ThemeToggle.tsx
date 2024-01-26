@@ -13,7 +13,7 @@ export const ThemeToggle = () => {
     }
 
     return (
-        <Box sx={{ flex: 1, width: '100%' }}>
+        <Box>
             <Switch
                 size="lg"
                 slotProps={{
@@ -24,7 +24,7 @@ export const ThemeToggle = () => {
                 }}
                 checked={mode === 'light'}
                 sx={{
-                    '--Switch-thumbSize': '16px'
+                    '--Switch-thumbSize': '16px',
                 }}
                 onChange={toggleMode}
             />

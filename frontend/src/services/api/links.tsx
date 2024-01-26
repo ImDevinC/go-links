@@ -57,15 +57,7 @@ export const getPopular = async (): Promise<GetLinksResponse> => {
         const links: LinkData[] = await response.json()
         return { links }
     } catch (exception: any) {
-        // return { links: [], error: 'Failed to communicate with server, please try your request again' }
-        return {
-            links: [{
-                url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-                name: "rick",
-                description: "Never gonna give you up",
-                views: 10,
-            }]
-        }
+        return { links: [], error: 'Failed to communicate with server, please try your request again' }
     }
 }
 
