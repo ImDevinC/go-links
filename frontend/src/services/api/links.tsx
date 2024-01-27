@@ -1,4 +1,4 @@
-const baseUrl = process.env.REACT_APP_ENV === "production" ? process.env.PUBLIC_URL : "http://localhost:8080";
+const baseUrl = process.env.NODE_ENV === "production" ? "" : "http://localhost:8080";
 
 export interface LinkData {
     url: string;
