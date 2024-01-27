@@ -79,6 +79,17 @@ func (a *App) Start(ctx context.Context, cfg *config.Config) error {
 	}
 
 	r.PathPrefix("/static").Methods(http.MethodGet).Handler(fs)
+	assets := []string{
+		"/asset-manifest.json",
+		"/favicon.ico",
+		"/logo192.png",
+		"/logo512.png",
+		"/manifest.json",
+		"/robots.txt",
+	}
+	for _, a := range assets {
+		r.Path(a).Handler(fs)
+	}
 	r.PathPrefix("/static").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sendError(w, http.StatusMethodNotAllowed, ErrorResponse{Error: "Protected route"})
 	})
