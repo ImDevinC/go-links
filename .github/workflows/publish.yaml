@@ -6,5 +6,3 @@ on:
 jobs:
   publish:
     uses: imdevinc/imdevinc/.github/workflows/publish-docker.yaml@master
-    secrets:
-      GHCR_PAT: ${{ secrets.GHCR_PAT }}
