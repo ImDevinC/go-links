@@ -7,4 +7,5 @@ jobs:
   publish:
     permissions:
       packages: write
+      contents: read
     uses: imdevinc/imdevinc/.github/workflows/publish-docker.yaml@master
