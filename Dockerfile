@@ -20,7 +20,7 @@ COPY frontend/ .
 RUN npm ci && \
     npm run build
 
-FROM scratch
+FROM gcr.io/distroless/base
 
 COPY --from=backend /app/main /main
 COPY --from=frontend /app/build/ /

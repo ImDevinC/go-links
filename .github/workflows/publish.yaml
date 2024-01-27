@@ -1,0 +1,8 @@
+name: Publish Docker Image
+
+on:
+  workflow_call:
+
+jobs:
+  publish:
+    uses: imdevinc/imdevinc/.github/workflows/shared/publish-docker.yaml
