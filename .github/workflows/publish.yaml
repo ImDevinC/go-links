@@ -5,4 +5,4 @@ on:
 
 jobs:
   publish:
-    uses: imdevinc/imdevinc/.github/workflows/shared/publish-docker.yaml@main
+    uses: imdevinc/imdevinc/.github/workflows/publish-docker.yaml@main
