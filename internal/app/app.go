@@ -131,7 +131,7 @@ func (a *App) handleGetLink(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) handleCreateLink(w http.ResponseWriter, r *http.Request) {
-	email, err := getEmailFromRequest(r)
+	email, err := a.getEmailFromRequest(r)
 	if err != nil {
 		a.Logger.Error(err.Error())
 		sendError(w, http.StatusUnauthorized, ErrorResponse{Error: "missing authentication token"})
@@ -188,7 +188,7 @@ func (a *App) handleGetLinkList(t GetLinksType) http.HandlerFunc {
 		case Recent:
 			links, err = a.Store.GetRecentLinks(r.Context(), 10)
 		case Owned:
-			email, err := getEmailFromRequest(r)
+			email, err := a.getEmailFromRequest(r)
 			if err != nil {
 				a.Logger.Error(err.Error())
 				sendError(w, http.StatusUnauthorized, ErrorResponse{Error: "missing authentication token"})
@@ -289,7 +289,10 @@ func (a *App) configureSaml() (*samlsp.Middleware, error) {
 	return sp, nil
 }
 
-func getEmailFromRequest(r *http.Request) (string, error) {
+func (a *App) getEmailFromRequest(r *http.Request) (string, error) {
+	if a.sp == nil {
+		return "untracked", nil
+	}
 	c, err := r.Cookie("token")
 	if err != nil {
 		return "", fmt.Errorf("failed to get cookie: %w", err)
