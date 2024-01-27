@@ -1,6 +1,9 @@
 package config
 
-import "os"
+import (
+	"os"
+	"strconv"
+)
 
 const defaultCert = `-----BEGIN CERTIFICATE-----
 MIIDAzCCAeugAwIBAgIUH8uj5uCIpLBnBiUcAL7VdYXqvF8wDQYJKoZIhvcNAQEL
@@ -62,6 +65,7 @@ type SSOConfig struct {
 	MetadataFile string
 	EntityID     string
 	CallbackURL  string
+	Require      bool
 }
 
 func FromEnv() Config {
@@ -73,6 +77,11 @@ func FromEnv() Config {
 	if os.Getenv("SSO_SAML_KEY") != "" {
 		key = []byte(os.Getenv("SSO_SAML_KEY"))
 	}
+	requireSSORaw := os.Getenv("SSO_REQUIRE")
+	requireSSO := false
+	if requireSSORaw != "" {
+		requireSSO, _ = strconv.ParseBool(requireSSORaw)
+	}
 	cfg := Config{
 		StaticPath: os.Getenv("STATIC_PATH"),
 		SSO: SSOConfig{
@@ -81,6 +90,7 @@ func FromEnv() Config {
 			MetadataFile: os.Getenv("SSO_METADATA_FILE"),
 			EntityID:     os.Getenv("SSO_ENTITY_ID"),
 			CallbackURL:  os.Getenv("SSO_CALLBACK_URL"),
+			Require:      requireSSO,
 		},
 	}
 

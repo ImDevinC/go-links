@@ -1,0 +1,149 @@
+---
+# Source: go-links/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: golinks-go-links
+  labels:
+    helm.sh/chart: go-links-0.1.0
+    app.kubernetes.io/name: go-links
+    app.kubernetes.io/instance: golinks
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+data:
+  SSO_ENTITY_ID: go-links
+  SSO_CALLBACK_URL: https://go.collins.home
+  SSO_METADATA_FILE: <?xml version="1.0" encoding="UTF-8"?><md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" entityID="https://accounts.google.com/o/saml2?idpid=C01kjpo6x" validUntil="2026-09-15T16:43:33.000Z"> <md:IDPSSODescriptor WantAuthnRequestsSigned="false" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+  <md:KeyDescriptor use="signing">
+    <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+      <ds:X509Data>
+        <ds:X509Certificate>MIIDdDCCAlygAwIBAgIGAXvvffRSMA0GCSqGSIb3DQEBCwUAMHsxFDASBgNVBAoTC0dvb2dsZSBJ
+          bmMuMRYwFAYDVQQHEw1Nb3VudGFpbiBWaWV3MQ8wDQYDVQQDEwZHb29nbGUxGDAWBgNVBAsTD0dv
+          b2dsZSBGb3IgV29yazELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWEwHhcNMjEwOTE2
+          MTY0MzMzWhcNMjYwOTE1MTY0MzMzWjB7MRQwEgYDVQQKEwtHb29nbGUgSW5jLjEWMBQGA1UEBxMN
+          TW91bnRhaW4gVmlldzEPMA0GA1UEAxMGR29vZ2xlMRgwFgYDVQQLEw9Hb29nbGUgRm9yIFdvcmsx
+          CzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
+          MIIBCgKCAQEAt7Q9dxYvEroHKzbuSiVEAN+bH2n6PufMGYpKB7c52dgnykOo62ifzQFZrOk2ALMA
+          gqlxTgGIEwuFixeqAOCw3N2CoA+EKSPUXyEW+z/oXxqX8phCfFbi80Jha5ZGq+m7QTw0X274tUf2
+          zCX/xeKkjCH9hCPdhfGanYFHE07+nTiNPtw3Q1uoLrbF567xH1yoj5cYmWTszL78o+JKB2v5EDg0
+          fBf13+fYeQ1Ie5PZMvU1U4YTvwKiI3ZnMLloRK0NDPOB/bz0q52miBF9WH052H5QlTAyNlosoxKB
+          H3M4hjzx3BlHaWRKUlq0TovaSInF63oP6jQfc7WDNVvXLLf1dQIDAQABMA0GCSqGSIb3DQEBCwUA
+          A4IBAQCoaEXszPrClc60rwFzUaJkIDx2/yBWmgaavNzmM/JiOwYxfmxqZ/UNGqYEYQtsKYRanr9B
+          Bz/Jl5SltKpvZlePiUdVxvigQLgrLZUQn6CXGjlT5kZvdV4Z5JCts9+cubHMp7YiV9DxRsI6uqSa
+          vJ6HRTtZ/lsx4h0raajtze0LliCIcPyQtAErS0fI2xazLdm/53uvIWBHJdJ4Xj4QsUftZDie3p5L
+          W1U+v3kFpwzYT1ncX+COMnLRT0p+32wBPEu9zc1tdrsG+lKt34zpqKv8duY0ond8vK9uYENkKTjX
+          /HNOKHbR23ARFnrczPaOePv1UL7vn6oAjxFzv9H+9P/k</ds:X509Certificate>
+        </ds:X509Data>
+      </ds:KeyInfo>
+    </md:KeyDescriptor>
+    <md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress</md:NameIDFormat>
+    <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://accounts.google.com/o/saml2/idp?idpid=C01kjpo6x"/>
+    <md:SingleSignOnService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://accounts.google.com/o/saml2/idp?idpid=C01kjpo6x"/>
+  </md:IDPSSODescriptor>
+</md:EntityDescriptor>
+
+---
+# Source: go-links/templates/tests/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "golinks-go-links-test-connection"
+  labels:
+    helm.sh/chart: go-links-0.1.0
+    app.kubernetes.io/name: go-links
+    app.kubernetes.io/instance: golinks
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['golinks-go-links:80']
+  restartPolicy: Never
+
+---
+# Source: go-links/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: golinks-go-links
+  labels:
+    helm.sh/chart: go-links-0.1.0
+    app.kubernetes.io/name: go-links
+    app.kubernetes.io/instance: golinks
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+
+---
+# Source: go-links/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: golinks-go-links
+  labels:
+    helm.sh/chart: go-links-0.1.0
+    app.kubernetes.io/name: go-links
+    app.kubernetes.io/instance: golinks
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: go-links
+    app.kubernetes.io/instance: golinks
+
+---
+# Source: go-links/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: golinks-go-links
+  labels:
+    helm.sh/chart: go-links-0.1.0
+    app.kubernetes.io/name: go-links
+    app.kubernetes.io/instance: golinks
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: go-links
+      app.kubernetes.io/instance: golinks
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: go-links
+        app.kubernetes.io/instance: golinks
+    spec:
+      serviceAccountName: golinks-go-links
+      securityContext:
+        {}
+      containers:
+        - name: go-links
+          securityContext:
+            {}
+          image: "ghcr.io/imdevinc/go-links:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {}
