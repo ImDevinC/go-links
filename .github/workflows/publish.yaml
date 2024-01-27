@@ -8,4 +8,4 @@ jobs:
     permissions:
       packages: write
       contents: read
-    uses: imdevinc/imdevinc/.github/workflows/publish-docker.yaml@v1
+    uses: imdevinc/imdevinc/.github/workflows/publish-docker.yaml@v1.0.0
