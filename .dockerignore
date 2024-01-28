@@ -1,2 +1,6 @@
-build/
-node_modules/
+.github/
+frontend/node_modules/
+frontend/build/
+.env
+frontend/.env
+*.xml

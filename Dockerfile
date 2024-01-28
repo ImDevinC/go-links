@@ -14,7 +14,7 @@ RUN go mod download
 COPY cmd/ cmd/
 COPY internal/ internal/
 
-RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o /app/main ./cmd/main.go
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -ldflags='-s -w' -trimpath -o /app/main ./cmd/main.go
 
 FROM node:21-alpine AS frontend
 
