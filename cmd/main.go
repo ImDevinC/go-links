@@ -36,6 +36,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	defer s.Close(ctx)
+
 	server := app.App{
 		Store:  s,
 		Logger: logger,
