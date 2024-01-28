@@ -137,7 +137,10 @@ func (a *App) handleGetLink(w http.ResponseWriter, r *http.Request) {
 		sendError(w, http.StatusNotFound, ErrorResponse{Error: "link not found"})
 		return
 	}
-	_ = a.Store.IncrementLinkViews(r.Context(), result.Name)
+	err = a.Store.IncrementLinkViews(r.Context(), result.Name)
+	if err != nil {
+		a.Logger.Error(err.Error())
+	}
 	http.Redirect(w, r, result.URL, http.StatusFound)
 }
 

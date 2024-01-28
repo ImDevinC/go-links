@@ -8,14 +8,14 @@ import (
 )
 
 type Link struct {
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	URL         string    `json:"url"`
-	Views       int       `json:"views"`
-	Created     time.Time `json:"created_at"`
-	Updated     time.Time `json:"updated_at"`
-	CreatedBy   string    `json:"created_by"`
-	Disabled    bool      `json:"disabled"`
+	Name        string    `json:"name" bson:"_id"`
+	Description string    `json:"description" bson:"description"`
+	URL         string    `json:"url" bson:"url"`
+	Views       int       `json:"views" bson:"views"`
+	Created     time.Time `json:"created_at" bson:"created_at"`
+	Updated     time.Time `json:"updated_at" bson:"updated_at"`
+	CreatedBy   string    `json:"created_by" bson:"created_by"`
+	Disabled    bool      `json:"disabled" bson:"disabled"`
 }
 
 func CreateLinkFromPayload(payload []byte) (Link, error) {
@@ -40,4 +40,5 @@ type Store interface {
 	GetOwnedLinks(ctx context.Context, email string) ([]Link, error)
 	IncrementLinkViews(ctx context.Context, name string) error
 	QueryLinks(ctx context.Context, query string) ([]Link, error)
+	Close(ctx context.Context) error
 }
