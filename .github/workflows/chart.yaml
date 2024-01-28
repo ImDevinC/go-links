@@ -1,6 +1,7 @@
 name: Release helm chart
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -12,3 +13,5 @@ jobs:
     permissions:
       contents: write
     uses: imdevinc/imdevinc/.github/workflows/shared-chart-release.yaml@v1
+    with:
+      chart-dir: "deploy/go-links"
