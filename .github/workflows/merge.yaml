@@ -7,5 +7,7 @@ on:
 
 jobs:
   bump-semver:
+    permissions:
+      packages: write
     uses: imdevinc/imdevinc/.github/workflows/shared-bump-semver-tags.yaml@v1
     secrets: inherit
