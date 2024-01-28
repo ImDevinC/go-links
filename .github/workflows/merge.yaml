@@ -1,0 +1,10 @@
+name: Bump SemVer Tags
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  bump-semver:
+    uses: imdevinc/imdevinc/.github/workflows/shared-bump-semver-tags.yaml@v1
