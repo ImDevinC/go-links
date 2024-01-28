@@ -12,9 +12,9 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/imdevinc/go-links
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: latest
+  tag: ""
 
 imagePullSecrets: []
 nameOverride: ""
@@ -56,7 +56,7 @@ ingress:
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
-    - host: go.collins.home
+    - host: app.example.com
       paths:
         - path: /
           pathType: ImplementationSpecific
