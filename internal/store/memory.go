@@ -126,3 +126,8 @@ func (m *memory) QueryLinks(ctx context.Context, query string) ([]Link, error) {
 	}
 	return links, nil
 }
+
+// Close implements Store.
+func (*memory) Close(ctx context.Context) error {
+	return nil
+}

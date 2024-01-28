@@ -159,3 +159,8 @@ func (f *file) QueryLinks(ctx context.Context, query string) ([]Link, error) {
 	}
 	return links, nil
 }
+
+// Close implements Store.
+func (*file) Close(ctx context.Context) error {
+	return nil
+}

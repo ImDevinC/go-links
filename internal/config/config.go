@@ -59,6 +59,7 @@ type Config struct {
 	StaticPath string `env:"STATIC_PATH,default=/"`
 	SSO        SSOConfig
 	StoreType  StoreType `env:"STORE_TYPE,default=memory"`
+	Mongo      MongoConfig
 }
 
 type SSOConfig struct {
@@ -70,11 +71,19 @@ type SSOConfig struct {
 	Require      bool   `env:"SSO_REQUIRE,default=false"`
 }
 
+type MongoConfig struct {
+	Username     string `env:"MONGO_USERNAME"`
+	Password     string `env:"MONGO_PASSWORD"`
+	Host         string `env:"MONGO_HOST"`
+	DatabaseName string `env:"MONGO_DB_NAME"`
+}
+
 type StoreType string
 
 const (
 	StoreTypeMemory StoreType = "memory"
 	StoreTypeFile   StoreType = "file"
+	StoreTypeMongo  StoreType = "mongo"
 )
 
 func FromEnv(ctx context.Context) (Config, error) {
