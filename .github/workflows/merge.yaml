@@ -8,3 +8,4 @@ on:
 jobs:
   bump-semver:
     uses: imdevinc/imdevinc/.github/workflows/shared-bump-semver-tags.yaml@v1
+    secrets: inherit
