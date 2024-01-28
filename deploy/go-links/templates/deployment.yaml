@@ -33,22 +33,26 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{ if .Values.config }}
           env:
+            {{- if .Values.config.ssoEntityId }}
             - name: SSO_ENTITY_ID
               valueFrom:
                 configMapKeyRef:
                   name: {{ include "go-links.fullname" . }}
                   key: SSO_ENTITY_ID
+            {{- end }}
+            {{- if .Values.config.ssoCallbackUrl }}
             - name: SSO_CALLBACK_URL
               valueFrom:
                 configMapKeyRef:
                   name: {{ include "go-links.fullname" . }}
                   key: SSO_CALLBACK_URL
+            {{- end }}
+            {{- if .Values.config.ssoMetadataFileContents }}
             - name: SSO_METADATA_FILE
               value: /config/ssoidpmetadata.xml
-          {{ end }}
-          {{ if .Values.config }}
+            {{- end }}
+          {{ if .Values.config.ssoMetadataFileContents }}
           volumeMounts:
             - name: metadata
               mountPath: /config
@@ -68,7 +72,7 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       
-      {{ if .Values.config }}
+      {{ if .Values.config.ssoMetadataFileContents }}
       volumes:
         - name: metadata
           configMap:
