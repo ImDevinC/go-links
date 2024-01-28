@@ -1,8 +1,9 @@
 package config
 
 import (
-	"os"
-	"strconv"
+	"context"
+
+	"github.com/sethvargo/go-envconfig"
 )
 
 const defaultCert = `-----BEGIN CERTIFICATE-----
@@ -55,44 +56,37 @@ cCkYBl4BcxLn1UdBhgCAY5w=
 -----END PRIVATE KEY-----`
 
 type Config struct {
-	StaticPath string
+	StaticPath string `env:"STATIC_PATH,default=/"`
 	SSO        SSOConfig
+	StoreType  StoreType `env:"STORE_TYPE,default=memory"`
 }
 
 type SSOConfig struct {
-	SamlCert     []byte
-	SamlKey      []byte
-	MetadataFile string
-	EntityID     string
-	CallbackURL  string
-	Require      bool
+	SamlCert     []byte `env:"SSO_SAML_CERT"`
+	SamlKey      []byte `env:"SSO_SAML_KEY"`
+	MetadataFile string `env:"SSO_METADATA_FILE"`
+	EntityID     string `env:"SSO_ENTITY_ID"`
+	CallbackURL  string `env:"SSO_CALLBACK_URL"`
+	Require      bool   `env:"SSO_REQUIRE,default=false"`
 }
 
-func FromEnv() Config {
-	cert := []byte(defaultCert)
-	if os.Getenv("SSO_SAML_CERT") != "" {
-		cert = []byte(os.Getenv("SSO_SAML_CERT"))
-	}
-	key := []byte(defaultKey)
-	if os.Getenv("SSO_SAML_KEY") != "" {
-		key = []byte(os.Getenv("SSO_SAML_KEY"))
-	}
-	requireSSORaw := os.Getenv("SSO_REQUIRE")
-	requireSSO := false
-	if requireSSORaw != "" {
-		requireSSO, _ = strconv.ParseBool(requireSSORaw)
-	}
-	cfg := Config{
-		StaticPath: os.Getenv("STATIC_PATH"),
-		SSO: SSOConfig{
-			SamlCert:     cert,
-			SamlKey:      key,
-			MetadataFile: os.Getenv("SSO_METADATA_FILE"),
-			EntityID:     os.Getenv("SSO_ENTITY_ID"),
-			CallbackURL:  os.Getenv("SSO_CALLBACK_URL"),
-			Require:      requireSSO,
-		},
-	}
+type StoreType string
 
-	return cfg
+const (
+	StoreTypeMemory StoreType = "memory"
+	StoreTypeFile   StoreType = "file"
+)
+
+func FromEnv(ctx context.Context) (Config, error) {
+	cfg := Config{}
+	if err := envconfig.Process(ctx, &cfg); err != nil {
+		return Config{}, err
+	}
+	if cfg.SSO.SamlCert == nil {
+		cfg.SSO.SamlCert = []byte(defaultCert)
+	}
+	if cfg.SSO.SamlKey == nil {
+		cfg.SSO.SamlKey = []byte(defaultKey)
+	}
+	return cfg, nil
 }

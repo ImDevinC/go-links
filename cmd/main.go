@@ -19,9 +19,13 @@ func main() {
 		Logger: logger,
 	}
 
-	cfg := config.FromEnv()
-	err := server.Start(context.Background(), &cfg)
+	ctx := context.Background()
+	cfg, err := config.FromEnv(ctx)
 	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+	if err := server.Start(ctx, &cfg); err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
