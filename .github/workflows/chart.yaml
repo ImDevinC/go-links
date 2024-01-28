@@ -1,0 +1,12 @@
+name: Release helm chart
+
+on:
+  push:
+    branches:
+      - main
+    path:
+      - "deploy/go-links/Chart.yaml"
+
+jobs:
+  release-chart:
+    uses: imdevinc/imdevinc/.github/workflows/shared-chart-release.yaml@v1
