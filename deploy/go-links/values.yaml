@@ -49,7 +49,7 @@ service:
   port: 8080
 
 ingress:
-  enabled: true
+  enabled: false
   className: nginx
   annotations:
     {}
