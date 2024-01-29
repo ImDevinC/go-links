@@ -12,4 +12,5 @@ jobs:
       issues: read
       pull-requests: read
     uses: imdevinc/imdevinc/.github/workflows/shared-bump-semver-tags.yaml@v1
-    secrets: inherit
+    secrets:
+      GITHUB_TOKEN: ${{ secrets.PUBLISH_PAT }}
