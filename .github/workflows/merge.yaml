@@ -13,4 +13,4 @@ jobs:
       pull-requests: read
     uses: imdevinc/imdevinc/.github/workflows/shared-bump-semver-tags.yaml@v1
     secrets:
-      GITHUB_TOKEN: ${{ secrets.PUBLISH_PAT }}
+      PUBLISH_PAT: ${{ secrets.PUBLISH_PAT }}
