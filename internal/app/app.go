@@ -101,7 +101,6 @@ func (a *App) Start(ctx context.Context, cfg *config.Config) error {
 
 func (a *App) indexHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		a.Logger.With("host", r.Host).Info("request received")
 		if r.Host == a.config.FQDN {
 			next.ServeHTTP(w, r)
 		} else {
@@ -147,7 +146,9 @@ func (a *App) handleLink(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleGetLink(w http.ResponseWriter, r *http.Request) {
 	result, err := a.Store.GetLinkByName(r.Context(), cleanLink(mux.Vars(r)["link"]))
 	if err != nil {
-		sendError(w, http.StatusNotFound, ErrorResponse{Error: "link not found"})
+		w.Header().Set("Location", fmt.Sprintf("//%s", a.config.FQDN))
+		w.WriteHeader(http.StatusTemporaryRedirect)
+		// sendError(w, http.StatusNotFound, ErrorResponse{Error: "link not found"})
 		return
 	}
 	err = a.Store.IncrementLinkViews(r.Context(), result.Name)
