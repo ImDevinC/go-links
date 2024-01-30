@@ -60,7 +60,8 @@ type Config struct {
 	SSO        SSOConfig
 	StoreType  StoreType `env:"STORE_TYPE,default=memory"`
 	Mongo      MongoConfig
-	Port       int `env:"PORT,default=8080"`
+	Port       int    `env:"PORT,default=8080"`
+	FQDN       string `env:"FQDN,required"`
 }
 
 type SSOConfig struct {

@@ -67,6 +67,7 @@ func (a *App) Start(ctx context.Context, cfg *config.Config) error {
 
 	r := mux.NewRouter()
 	r.Use(corsHandler)
+	r.Use(a.indexHandler)
 
 	fs := http.FileServer(http.Dir(cfg.StaticPath))
 	if sp != nil {
@@ -96,6 +97,18 @@ func (a *App) Start(ctx context.Context, cfg *config.Config) error {
 	r.HandleFunc("/{link:.*}", a.handleLink)
 	a.Logger.With("port", cfg.Port).Info("starting server")
 	return http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), r)
+}
+
+func (a *App) indexHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		a.Logger.With("host", r.Host).Info("request received")
+		if r.Host == a.config.FQDN {
+			next.ServeHTTP(w, r)
+		} else {
+			w.Header().Set("Location", fmt.Sprintf("//%s%s", a.config.FQDN, r.URL.Path))
+			w.WriteHeader(http.StatusMovedPermanently)
+		}
+	})
 }
 
 func corsHandler(next http.Handler) http.Handler {
