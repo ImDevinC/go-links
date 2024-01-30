@@ -36,6 +36,8 @@ spec:
           env:
             - name: PORT
               value: "{{ .Values.config.port | default 8080 }}"
+            - name: FQDN
+              value: "{{ .Values.config.fqdn }}"
             {{- if .Values.config.ssoEntityId }}
             - name: SSO_ENTITY_ID
               valueFrom:
