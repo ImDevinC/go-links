@@ -1,5 +1,5 @@
 import { DarkMode, LightMode } from "@mui/icons-material";
-import { Box, Switch } from "@mui/joy";
+import { Switch } from "@mui/joy";
 import { useColorScheme } from "@mui/joy";
 import React, { useState } from "react";
 
@@ -13,21 +13,20 @@ export const ThemeToggle = () => {
     }
 
     return (
-        <Box>
-            <Switch
-                size="lg"
-                slotProps={{
-                    input: { 'arial-label': 'Dark mode' },
-                    thumb: {
-                        children: thumb
-                    }
-                }}
-                checked={mode === 'light'}
-                sx={{
-                    '--Switch-thumbSize': '16px',
-                }}
-                onChange={toggleMode}
-            />
-        </Box>
+        <Switch
+            size="lg"
+            slotProps={{
+                input: { 'arial-label': 'Dark mode' },
+                thumb: {
+                    children: thumb
+                }
+            }}
+            checked={mode === 'light'}
+            sx={{
+                '--Switch-thumbSize': '16px',
+                alignSelf: 'flex-end',
+            }}
+            onChange={toggleMode}
+        />
     )
 }
