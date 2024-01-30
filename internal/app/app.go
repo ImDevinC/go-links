@@ -38,6 +38,7 @@ const (
 )
 
 var staticRegexp = regexp.MustCompile(`^static(\/.*)?|api\/popular|api\/recent`)
+var validLinkRegexp = regexp.MustCompile(`^[a-zA-Z0-9\/\-]*$`)
 
 type ErrorResponse struct {
 	Error string `json:"error,omitempty"`
@@ -123,7 +124,11 @@ func (a *App) handleLink(w http.ResponseWriter, r *http.Request) {
 	// static/ is protected due to web display resources
 	v := mux.Vars(r)
 	if link, ok := v["link"]; ok {
-		link = cleanLink(link)
+		link, err := cleanLink(link)
+		if err != nil {
+			sendError(w, http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+			return
+		}
 		if staticRegexp.Match([]byte(link)) {
 			w.WriteHeader(http.StatusForbidden)
 			return
@@ -144,11 +149,15 @@ func (a *App) handleLink(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) handleGetLink(w http.ResponseWriter, r *http.Request) {
-	result, err := a.Store.GetLinkByName(r.Context(), cleanLink(mux.Vars(r)["link"]))
+	link, err := cleanLink(mux.Vars(r)["link"])
+	if err != nil {
+		sendError(w, http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		return
+	}
+	result, err := a.Store.GetLinkByName(r.Context(), link)
 	if err != nil {
 		w.Header().Set("Location", fmt.Sprintf("//%s", a.config.FQDN))
 		w.WriteHeader(http.StatusTemporaryRedirect)
-		// sendError(w, http.StatusNotFound, ErrorResponse{Error: "link not found"})
 		return
 	}
 	err = a.Store.IncrementLinkViews(r.Context(), result.Name)
@@ -178,7 +187,11 @@ func (a *App) handleCreateLink(w http.ResponseWriter, r *http.Request) {
 		sendError(w, http.StatusBadRequest, ErrorResponse{Error: "invalid payload"})
 		return
 	}
-	link.Name = cleanLink(mux.Vars(r)["link"])
+	clean, err := cleanLink(mux.Vars(r)["link"])
+	if err != nil {
+		sendError(w, http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+	}
+	link.Name = clean
 	link.CreatedBy = email
 	err = a.Store.CreateLink(r.Context(), link)
 	if err != nil {
@@ -190,8 +203,12 @@ func (a *App) handleCreateLink(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) handleDeleteLink(w http.ResponseWriter, r *http.Request) {
-	name := cleanLink(mux.Vars(r)["link"])
-	err := a.Store.DisableLink(r.Context(), name)
+	name, err := cleanLink(mux.Vars(r)["link"])
+	if err != nil {
+		sendError(w, http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		return
+	}
+	err = a.Store.DisableLink(r.Context(), name)
 	if err != nil {
 		a.Logger.Error(err.Error())
 		sendError(w, http.StatusInternalServerError, ErrorResponse{Error: "internal server error"})
@@ -200,7 +217,6 @@ func (a *App) handleDeleteLink(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusAccepted)
 }
 
-// func (a *App) handleGetLinkList(w http.ResponseWriter, r *http.Request) {
 func (a *App) handleGetLinkList(t GetLinksType) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -247,9 +263,9 @@ func (a *App) handleGetLinkList(t GetLinksType) http.HandlerFunc {
 	}
 }
 
-func cleanLink(link string) string {
+func cleanLink(link string) (string, error) {
 	if len(link) == 0 {
-		return link
+		return "", fmt.Errorf("link is empty")
 	}
 	if link[0] == '/' {
 		link = link[1:]
@@ -257,7 +273,16 @@ func cleanLink(link string) string {
 	if link[len(link)-1] == '/' {
 		link = link[:len(link)-1]
 	}
-	return link
+	if link[0] == '-' {
+		return "", fmt.Errorf("name input is invalid")
+	}
+	if link[len(link)-1] == '-' {
+		return "", fmt.Errorf("name input is invalid")
+	}
+	if !validLinkRegexp.Match([]byte(link)) {
+		return "", fmt.Errorf("name input is invalid")
+	}
+	return link, nil
 }
 
 func sendError(w http.ResponseWriter, code int, message ErrorResponse) {
