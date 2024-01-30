@@ -2,6 +2,16 @@ apiVersion: v1
 entries:
   go-links:
   - apiVersion: v2
+    appVersion: 0.0.7
+    created: "2024-01-30T07:37:21.939158941Z"
+    description: A Helm chart for Kubernetes
+    digest: 5b87b3c172cbcb3e22fb3ded83c11f03d6a1e0a670fb292f763dfa4acb43c8b4
+    name: go-links
+    type: application
+    urls:
+    - https://github.com/ImDevinC/go-links/releases/download/go-links-0.0.7/go-links-0.0.7.tgz
+    version: 0.0.7
+  - apiVersion: v2
     appVersion: 0.0.6
     created: "2024-01-29T09:31:46.534711119Z"
     description: A Helm chart for Kubernetes
@@ -21,4 +31,4 @@ entries:
     urls:
     - https://github.com/ImDevinC/go-links/releases/download/go-links-0.0.1/go-links-0.0.1.tgz
     version: 0.0.1
-generated: "2024-01-29T09:31:46.534723552Z"
+generated: "2024-01-30T07:37:21.93917479Z"
