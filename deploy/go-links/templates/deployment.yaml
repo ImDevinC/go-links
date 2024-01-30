@@ -35,7 +35,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: PORT
-              value: "{{ .Values.service.port }}"
+              value: "{{ .Values.config.port | default 8080 }}"
             {{- if .Values.config.ssoEntityId }}
             - name: SSO_ENTITY_ID
               valueFrom:
@@ -61,7 +61,7 @@ spec:
           {{ end }}
           ports:
             - name: http
-              containerPort: {{ .Values.service.port }}
+              containerPort: {{ .Values.config.port | default 8080 }}
               protocol: TCP
           livenessProbe:
             httpGet:
