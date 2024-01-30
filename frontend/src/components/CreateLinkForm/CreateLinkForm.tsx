@@ -1,7 +1,7 @@
-import { Alert, Box, Button, FormControl, FormLabel, IconButton, Input, Stack } from "@mui/joy";
+import { Alert, Box, Button, FormControl, FormLabel, IconButton, Input, Stack, Tooltip } from "@mui/joy";
 import React, { FormEvent, useState } from "react";
 import { LinkData, createLink } from "../../services/api/links";
-import { CloseRounded } from "@mui/icons-material";
+import { CloseRounded, Info } from "@mui/icons-material";
 
 interface CreateLinkFormProps {
     onSuccess: () => void
@@ -50,7 +50,11 @@ export const CreateLinkForm = (props: CreateLinkFormProps) => {
                         <Input value={formData.url} placeholder="https://google.com" name="url" required onChange={handleInputChange} />
                     </FormControl>
                     <FormControl>
-                        <FormLabel>Golink Name (without go/ prefix)</FormLabel>
+                        <FormLabel>Golink Name (without go/ prefix)
+                            <Tooltip title="Shoul not contain any special characters other than / or -, and should not start with / or -" variant="soft">
+                                <Info />
+                            </Tooltip>
+                        </FormLabel>
                         <Input value={formData.name} placeholder="google" required name="name" onChange={handleInputChange} />
                     </FormControl>
                     <FormControl>
