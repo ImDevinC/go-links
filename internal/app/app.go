@@ -94,8 +94,8 @@ func (a *App) Start(ctx context.Context, cfg *config.Config) error {
 		sendError(w, http.StatusMethodNotAllowed, ErrorResponse{Error: "Protected route"})
 	})
 	r.HandleFunc("/{link:.*}", a.handleLink)
-	a.Logger.Info("starting server on port 8080")
-	return http.ListenAndServe(fmt.Sprintf(":%d", 8080), r)
+	a.Logger.With("port", cfg.Port).Info("starting server")
+	return http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), r)
 }
 
 func corsHandler(next http.Handler) http.Handler {
