@@ -61,26 +61,30 @@ func (a *App) Start(ctx context.Context, cfg *config.Config) error {
 	sp, err := a.configureSaml()
 	if err != nil && a.config.SSO.Require {
 		return fmt.Errorf("failed to configure saml: %w", err)
-	} else if err != nil {
-		a.Logger.Error(err.Error())
 	}
 	a.sp = sp
+	authWrapper := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if sp == nil {
+				next.ServeHTTP(w, r)
+			} else {
+				sp.RequireAccount(next).ServeHTTP(w, r)
+			}
+		})
+	}
 
 	r := mux.NewRouter()
 	r.Use(corsHandler)
 	r.Use(a.indexHandler)
 
 	fs := http.FileServer(http.Dir(cfg.StaticPath))
-	if sp != nil {
-		r.PathPrefix("/api").Handler(sp.RequireAccount(http.HandlerFunc(a.handleApi)))
-		r.PathPrefix("/saml/").Handler(sp)
-		r.Path("/").Handler(sp.RequireAccount(fs))
-	} else {
-		r.PathPrefix("/api").Handler(http.HandlerFunc(a.handleApi))
-		r.Path("/").Handler(fs)
-	}
 
-	r.PathPrefix("/static").Methods(http.MethodGet).Handler(fs)
+	if sp != nil {
+		r.PathPrefix("/saml/").Handler(sp)
+	}
+	r.PathPrefix("/api").Handler(authWrapper(http.HandlerFunc(a.handleApi)))
+	r.Path("/").Handler(authWrapper(fs))
+	r.PathPrefix("/static").Methods(http.MethodGet).Handler(authWrapper(fs))
 	assets := []string{
 		"/asset-manifest.json",
 		"/favicon.ico",
@@ -90,12 +94,12 @@ func (a *App) Start(ctx context.Context, cfg *config.Config) error {
 		"/robots.txt",
 	}
 	for _, a := range assets {
-		r.Path(a).Handler(fs)
+		r.Path(a).Handler(authWrapper(fs))
 	}
-	r.PathPrefix("/static").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	r.PathPrefix("/static").Handler(authWrapper(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sendError(w, http.StatusMethodNotAllowed, ErrorResponse{Error: "Protected route"})
-	})
-	r.HandleFunc("/{link:.*}", a.handleLink)
+	})))
+	r.Path("/{link:.*}").Handler(authWrapper(http.HandlerFunc(a.handleLink)))
 	a.Logger.With("port", cfg.Port).Info("starting server")
 	return http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), r)
 }
