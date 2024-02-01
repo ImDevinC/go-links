@@ -44,6 +44,6 @@ metadata:
     {{- include "go-links.labels" . | nindent 4}}
 data:
   ssoidpmetadata.xml: >
-    {{ .Values.config.ssoMetadataFileContents }}
+    {{ .Values.config.ssoMetadataFileContents | nindent 4 }}
 {{- end -}}
 {{- end -}}
