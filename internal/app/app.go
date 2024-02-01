@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -160,6 +161,9 @@ func (a *App) handleGetLink(w http.ResponseWriter, r *http.Request) {
 	}
 	result, err := a.Store.GetLinkByName(r.Context(), link)
 	if err != nil {
+		if !errors.Is(err, store.ErrLinkNotFound) {
+			a.Logger.Error(err.Error())
+		}
 		w.Header().Set("Location", fmt.Sprintf("//%s", a.config.FQDN))
 		w.WriteHeader(http.StatusTemporaryRedirect)
 		return
@@ -286,7 +290,7 @@ func cleanLink(link string) (string, error) {
 	if !validLinkRegexp.Match([]byte(link)) {
 		return "", fmt.Errorf("name input is invalid")
 	}
-	return link, nil
+	return strings.ToLower(link), nil
 }
 
 func sendError(w http.ResponseWriter, code int, message ErrorResponse) {

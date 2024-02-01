@@ -32,3 +32,11 @@ services:
       - "14268:14268"
     environment:
       - COLLECTOR_OTLP_ENABLED=true
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres
+    ports:
+      - 5432:5432
