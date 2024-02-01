@@ -3,12 +3,23 @@
 # Declare variables to be passed into your templates.
 
 config:
+  port: 8080
   fqdn: app.example.com
-#  port: 8080
-#   ssoEntityId:
-#   ssoCallbackUrl:
-#   ssoMetadataFileContents:
-#   storeType: memory
+  storeType: memory
+  # mongo:
+  # username:
+  # password:
+  # host:
+  # dbName:
+  # postgres:
+  # username:
+  # password:
+  # host:
+  # dbName:
+  # ssoEntityId:
+  # ssoCallbackUrl:
+  # ssoRequire:
+  # ssoMetadataFileContents:
 
 replicaCount: 1
 
