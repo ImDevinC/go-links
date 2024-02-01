@@ -8,12 +8,14 @@ import (
 	"os"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 )
 
 type file struct {
 	path  string
 	links map[string]Link
+	mu    sync.Mutex
 }
 
 var _ Store = (*file)(nil)
@@ -44,10 +46,13 @@ func NewFileStore(path string, createFile bool) (*file, error) {
 	return &file{
 		path:  path,
 		links: links,
+		mu:    sync.Mutex{},
 	}, nil
 }
 
 func (f *file) saveLinks() error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	data, err := json.Marshal(f.links)
 	if err != nil {
 		return err

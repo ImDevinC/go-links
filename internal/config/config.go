@@ -60,6 +60,7 @@ type Config struct {
 	SSO        SSOConfig
 	StoreType  StoreType `env:"STORE_TYPE,default=memory"`
 	Mongo      MongoConfig
+	Postgres   PostgresConfig
 	Port       int    `env:"PORT,default=8080"`
 	FQDN       string `env:"FQDN,required"`
 }
@@ -80,12 +81,20 @@ type MongoConfig struct {
 	DatabaseName string `env:"MONGO_DB_NAME"`
 }
 
+type PostgresConfig struct {
+	Username     string `env:"POSTGRES_USERNAME"`
+	Password     string `env:"POSTGRES_PASSWORD"`
+	Host         string `env:"POSTGRES_HOST"`
+	DatabaseName string `env:"POSTGRES_DB_NAME"`
+}
+
 type StoreType string
 
 const (
-	StoreTypeMemory StoreType = "memory"
-	StoreTypeFile   StoreType = "file"
-	StoreTypeMongo  StoreType = "mongo"
+	StoreTypeMemory   StoreType = "memory"
+	StoreTypeFile     StoreType = "file"
+	StoreTypeMongo    StoreType = "mongo"
+	StoreTypePostgres StoreType = "postgres"
 )
 
 func FromEnv(ctx context.Context) (Config, error) {

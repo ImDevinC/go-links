@@ -33,29 +33,9 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          env:
-            - name: PORT
-              value: "{{ .Values.config.port | default 8080 }}"
-            - name: FQDN
-              value: "{{ .Values.config.fqdn }}"
-            {{- if .Values.config.ssoEntityId }}
-            - name: SSO_ENTITY_ID
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ include "go-links.fullname" . }}
-                  key: SSO_ENTITY_ID
-            {{- end }}
-            {{- if .Values.config.ssoCallbackUrl }}
-            - name: SSO_CALLBACK_URL
-              valueFrom:
-                configMapKeyRef:
-                  name: {{ include "go-links.fullname" . }}
-                  key: SSO_CALLBACK_URL
-            {{- end }}
-            {{- if .Values.config.ssoMetadataFileContents }}
-            - name: SSO_METADATA_FILE
-              value: /config/ssoidpmetadata.xml
-            {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "go-links.fullname" . }}
           {{ if .Values.config.ssoMetadataFileContents }}
           volumeMounts:
             - name: metadata
@@ -75,13 +55,13 @@ spec:
               port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-      
       {{ if .Values.config.ssoMetadataFileContents }}
+      {{- $fullName := include "go-links.fullname" . -}}
       volumes:
         - name: metadata
-          configMap:
-            name: {{ include "go-links.fullname" . }}
-      {{ end }}
+          configMap: 
+            name: {{ printf "%s-ssometadata" $fullName  }}
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

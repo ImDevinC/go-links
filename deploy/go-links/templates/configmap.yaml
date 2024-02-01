@@ -6,14 +6,44 @@ metadata:
   labels:
     {{- include "go-links.labels" . | nindent 4}}
 data:
+  PORT: "{{ .Values.config.port | default 8080 }}"
+  FQDN: {{ .Values.config.fqdn }}
+  STORE_TYPE: {{ .Values.config.storeType | default "memory" }}
+  {{- with .Values.config.mongo }}
+  MONGO_USERNAME: {{ .username }}
+  MONGO_PASSWORD: {{ .password }}
+  MONGO_HOST: {{ .host }}
+  MONGO_DB_NAME: {{ .dbName }}
+  {{- end -}}
+  {{- with .Values.config.postgres }}
+  POSTGRES_USERNAME: {{ .username }}
+  POSTGRES_PASSWORD: {{ .password }}
+  POSTGRES_HOST: {{ .host }}
+  POSTGRES_DB_NAME: {{ .dbName }}
+  {{- end -}}
   {{- if .Values.config.ssoEntityId }}
   SSO_ENTITY_ID: {{ .Values.config.ssoEntityId }}
   {{- end }}
   {{- if .Values.config.ssoCallbackUrl }}
   SSO_CALLBACK_URL: {{ .Values.config.ssoCallbackUrl }}
   {{- end }}
-  {{- if .Values.config.ssoMetadataFileContents }}
-  ssoidpmetadata.xml: |
-    {{ .Values.config.ssoMetadataFileContents }}
+  {{- if .Values.config.ssoRequire }}
+  SSO_REQUIRE: {{ .Values.config.ssoRequire | quote }}
   {{- end }}
+  {{- if .Values.config.ssoMetadataFileContents }}
+  SSO_METADATA_FILE: /config/ssoidpmetadata.xml
+  {{- end }}
+---
+{{ if .Values.config.ssoMetadataFileContents -}}
+{{- $fullName := include "go-links.fullname" . -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ printf "%s-ssometadata" $fullName  }}
+  labels:
+    {{- include "go-links.labels" . | nindent 4}}
+data:
+  ssoidpmetadata.xml: >
+    {{ .Values.config.ssoMetadataFileContents | nindent 4 }}
+{{- end -}}
 {{- end -}}

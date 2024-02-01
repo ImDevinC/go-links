@@ -29,6 +29,8 @@ func main() {
 		s = store.NewMemoryStore()
 	case config.StoreTypeMongo:
 		s, err = store.NewMongoDBStore(ctx, cfg.Mongo.Username, cfg.Mongo.Password, cfg.Mongo.Host, cfg.Mongo.DatabaseName)
+	case config.StoreTypePostgres:
+		s, err = store.NewPostgresStore(ctx, cfg.Postgres.Username, cfg.Postgres.Password, cfg.Postgres.Host, cfg.Postgres.DatabaseName)
 	}
 
 	if err != nil {
