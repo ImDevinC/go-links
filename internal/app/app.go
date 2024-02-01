@@ -202,6 +202,10 @@ func (a *App) handleCreateLink(w http.ResponseWriter, r *http.Request) {
 	link.Name = clean
 	link.CreatedBy = email
 	err = a.Store.CreateLink(r.Context(), link)
+	if err == store.ErrIDExists {
+		sendError(w, http.StatusConflict, ErrorResponse{Error: "link already exists"})
+		return
+	}
 	if err != nil {
 		a.Logger.Error(err.Error())
 		sendError(w, http.StatusInternalServerError, ErrorResponse{Error: "internal server error"})

@@ -6,22 +6,24 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type postgres struct {
-	conn *pgx.Conn
+	pool *pgxpool.Pool
 }
 
 var _ (Store) = (*postgres)(nil)
 
 func NewPostgresStore(ctx context.Context, user string, password string, host string, databaseName string) (*postgres, error) {
 	connectionString := fmt.Sprintf("postgres://%s:%s@%s/%s", user, password, host, databaseName)
-	conn, err := pgx.Connect(ctx, connectionString)
+	pool, err := pgxpool.New(ctx, connectionString)
 	if err != nil {
 		return nil, err
 	}
 	p := &postgres{
-		conn: conn,
+		pool: pool,
 	}
 	err = p.ensureTable(ctx)
 	if err != nil {
@@ -33,15 +35,22 @@ func NewPostgresStore(ctx context.Context, user string, password string, host st
 
 // Close implements Store.
 func (p *postgres) Close(ctx context.Context) error {
-	return p.conn.Close(ctx)
+	p.pool.Close()
+	return nil
 }
 
 // CreateLink implements Store.
 func (p *postgres) CreateLink(ctx context.Context, link Link) error {
-	_, err := p.conn.Exec(ctx,
+	_, err := p.pool.Exec(ctx,
 		`insert into links(name, description, url, created_at, updated_at, created_by) values ($1, $2, $3, $4, $5, $6)`,
 		link.Name, link.Description, link.URL, link.Created, link.Created, link.CreatedBy,
 	)
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		if pgErr.ConstraintName != "" {
+			return ErrIDExists
+		}
+	}
 	if err != nil {
 		return err
 	}
@@ -50,7 +59,7 @@ func (p *postgres) CreateLink(ctx context.Context, link Link) error {
 
 // DisableLink implements Store.
 func (p *postgres) DisableLink(ctx context.Context, name string) error {
-	resp, err := p.conn.Exec(ctx, `delete from links where name = $1`, name)
+	resp, err := p.pool.Exec(ctx, `delete from links where name = $1`, name)
 	if err != nil {
 		return err
 	}
@@ -92,7 +101,7 @@ func (p *postgres) IncrementLinkViews(ctx context.Context, name string) error {
 		return err
 	}
 	views := link.Views + 1
-	resp, err := p.conn.Exec(ctx, `update links set views=$1 where name=$2`, views, name)
+	resp, err := p.pool.Exec(ctx, `update links set views=$1 where name=$2`, views, name)
 	if err != nil {
 		return err
 	}
@@ -108,7 +117,7 @@ func (p *postgres) QueryLinks(ctx context.Context, query string) ([]Link, error)
 }
 
 func (p *postgres) getSingleResult(ctx context.Context, query string, args ...any) (Link, error) {
-	row := p.conn.QueryRow(ctx, query, args...)
+	row := p.pool.QueryRow(ctx, query, args...)
 	link := Link{}
 	err := row.Scan(&link.Name, &link.Description, &link.URL, &link.Views, &link.Created, &link.Updated, &link.CreatedBy, &link.Disabled)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -122,7 +131,7 @@ func (p *postgres) getSingleResult(ctx context.Context, query string, args ...an
 
 func (p *postgres) getMultipleResults(ctx context.Context, query string, args ...any) ([]Link, error) {
 	links := []Link{}
-	rows, err := p.conn.Query(ctx, query, args...)
+	rows, err := p.pool.Query(ctx, query, args...)
 	if err != nil {
 		return links, fmt.Errorf("query failed: %w", err)
 	}
@@ -139,7 +148,7 @@ func (p *postgres) getMultipleResults(ctx context.Context, query string, args ..
 }
 
 func (p *postgres) ensureTable(ctx context.Context) error {
-	_, err := p.conn.Exec(ctx, `create table if not exists links (
+	_, err := p.pool.Exec(ctx, `create table if not exists links (
 		name text not null primary key,
 		description text not null,
 		url text not null,
